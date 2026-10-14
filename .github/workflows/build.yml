@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Generate Full Android Project Automatically
+      - name: Generate Full Android Project v2.0
         run: |
           mkdir -p app/src/main/java/com/drblack/budscontroller
           mkdir -p app/src/main/res/layout
@@ -54,8 +54,8 @@ jobs:
                   applicationId "com.drblack.budscontroller"
                   minSdk 31
                   targetSdk 34
-                  versionCode 1
-                  versionName "1.0"
+                  versionCode 2
+                  versionName "2.0"
               }
               buildTypes {
                   debug {
@@ -84,10 +84,11 @@ jobs:
               <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
               <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
               <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+              <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 
               <application
                   android:allowBackup="true"
-                  android:label="Buds Controller"
+                  android:label="Buds Controller Pro"
                   android:supportsRtl="true"
                   android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
 
@@ -107,7 +108,12 @@ jobs:
                           <action android:name="com.drblack.budscontroller.ACTION_MODE_ANC" />
                           <action android:name="com.drblack.budscontroller.ACTION_MODE_TRANS" />
                           <action android:name="com.drblack.budscontroller.ACTION_MODE_OFF" />
+                          <action android:name="com.drblack.budscontroller.ACTION_VOL_UP" />
+                          <action android:name="com.drblack.budscontroller.ACTION_VOL_DOWN" />
+                          <action android:name="com.drblack.budscontroller.ACTION_PLAY_PAUSE" />
+                          <action android:name="com.drblack.budscontroller.ACTION_EQ" />
                           <action android:name="com.drblack.budscontroller.ACTION_OPEN_CODEC" />
+                          <action android:name="com.drblack.budscontroller.ACTION_CONNECT_PANEL" />
                           <action android:name="com.drblack.budscontroller.ACTION_REFRESH" />
                       </intent-filter>
                       <meta-data
@@ -121,8 +127,8 @@ jobs:
           cat << 'EOF' > app/src/main/res/xml/widget_info.xml
           <?xml version="1.0" encoding="utf-8"?>
           <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-              android:minWidth="250dp"
-              android:minHeight="110dp"
+              android:minWidth="280dp"
+              android:minHeight="150dp"
               android:updatePeriodMillis="1800000"
               android:initialLayout="@layout/widget_buds"
               android:resizeMode="horizontal|vertical"
@@ -134,10 +140,11 @@ jobs:
           <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
-              android:background="#1A1A1A"
+              android:background="#161616"
               android:orientation="vertical"
-              android:padding="12dp">
+              android:padding="10dp">
 
+              <!-- الصف الأول: اسم السماعة + البطارية + زر الاتصال السريع -->
               <LinearLayout
                   android:layout_width="match_parent"
                   android:layout_height="wrap_content"
@@ -149,29 +156,29 @@ jobs:
                       android:layout_width="0dp"
                       android:layout_height="wrap_content"
                       android:layout_weight="1"
-                      android:text="Moto Buds"
+                      android:text="moto buds"
                       android:textColor="#FFFFFF"
-                      android:textSize="16sp"
+                      android:textSize="15sp"
                       android:textStyle="bold" />
 
                   <TextView
                       android:id="@+id/tv_battery"
                       android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
-                      android:layout_marginEnd="10dp"
+                      android:layout_marginEnd="8dp"
                       android:text="🔋 --%"
                       android:textColor="#00E676"
-                      android:textSize="14sp"
+                      android:textSize="13sp"
                       android:textStyle="bold" />
 
                   <Button
-                      android:id="@+id/btn_codec"
+                      android:id="@+id/btn_connect"
                       android:layout_width="wrap_content"
-                      android:layout_height="34dp"
-                      android:backgroundTint="#333333"
-                      android:text="Audio / Codec"
+                      android:layout_height="32dp"
+                      android:backgroundTint="#2E7D32"
+                      android:text="🔗 اتصال/فصل"
                       android:textColor="#FFFFFF"
-                      android:textSize="11sp" />
+                      android:textSize="10sp" />
               </LinearLayout>
 
               <TextView
@@ -179,48 +186,112 @@ jobs:
                   android:layout_width="match_parent"
                   android:layout_height="wrap_content"
                   android:layout_marginTop="2dp"
-                  android:layout_marginBottom="8dp"
-                  android:text="الحالة: جاري الفحص..."
-                  android:textColor="#AAAAAA"
-                  android:textSize="12sp" />
+                  android:layout_marginBottom="6dp"
+                  android:text="الحالة: اضغط للتحديث"
+                  android:textColor="#BBBBBB"
+                  android:textSize="11sp" />
 
+              <!-- الصف الثاني: أزرار العزل والشفافية -->
               <LinearLayout
                   android:layout_width="match_parent"
                   android:layout_height="wrap_content"
+                  android:layout_marginBottom="6dp"
                   android:orientation="horizontal"
                   android:weightSum="3">
 
                   <Button
                       android:id="@+id/btn_anc"
                       android:layout_width="0dp"
-                      android:layout_height="42dp"
+                      android:layout_height="38dp"
                       android:layout_marginEnd="4dp"
                       android:layout_weight="1"
                       android:backgroundTint="#2C2C2C"
                       android:text="ANC عزل"
                       android:textColor="#FFFFFF"
-                      android:textSize="12sp" />
+                      android:textSize="11sp" />
 
                   <Button
                       android:id="@+id/btn_trans"
                       android:layout_width="0dp"
-                      android:layout_height="42dp"
+                      android:layout_height="38dp"
                       android:layout_marginEnd="4dp"
                       android:layout_weight="1"
                       android:backgroundTint="#2C2C2C"
                       android:text="شفافية"
                       android:textColor="#FFFFFF"
-                      android:textSize="12sp" />
+                      android:textSize="11sp" />
 
                   <Button
                       android:id="@+id/btn_off"
                       android:layout_width="0dp"
-                      android:layout_height="42dp"
+                      android:layout_height="38dp"
                       android:layout_weight="1"
                       android:backgroundTint="#2C2C2C"
                       android:text="عادي Off"
                       android:textColor="#FFFFFF"
-                      android:textSize="12sp" />
+                      android:textSize="11sp" />
+              </LinearLayout>
+
+              <!-- الصف الثالث: تحكم الصوت والميديا والمعادل والكوديك -->
+              <LinearLayout
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:orientation="horizontal"
+                  android:weightSum="5">
+
+                  <Button
+                      android:id="@+id/btn_vol_down"
+                      android:layout_width="0dp"
+                      android:layout_height="36dp"
+                      android:layout_marginEnd="3dp"
+                      android:layout_weight="1"
+                      android:backgroundTint="#333333"
+                      android:text="🔉-"
+                      android:textColor="#FFFFFF"
+                      android:textSize="11sp" />
+
+                  <Button
+                      android:id="@+id/btn_play_pause"
+                      android:layout_width="0dp"
+                      android:layout_height="36dp"
+                      android:layout_marginEnd="3dp"
+                      android:layout_weight="1"
+                      android:backgroundTint="#333333"
+                      android:text="⏯️"
+                      android:textColor="#FFFFFF"
+                      android:textSize="11sp" />
+
+                  <Button
+                      android:id="@+id/btn_vol_up"
+                      android:layout_width="0dp"
+                      android:layout_height="36dp"
+                      android:layout_marginEnd="3dp"
+                      android:layout_weight="1"
+                      android:backgroundTint="#333333"
+                      android:text="🔊+"
+                      android:textColor="#FFFFFF"
+                      android:textSize="11sp" />
+
+                  <Button
+                      android:id="@+id/btn_eq"
+                      android:layout_width="0dp"
+                      android:layout_height="36dp"
+                      android:layout_marginEnd="3dp"
+                      android:layout_weight="1"
+                      android:backgroundTint="#4A148C"
+                      android:text="EQ"
+                      android:textColor="#FFFFFF"
+                      android:textSize="10sp" />
+
+                  <Button
+                      android:id="@+id/btn_codec"
+                      android:layout_width="0dp"
+                      android:layout_height="36dp"
+                      android:layout_weight="1"
+                      android:backgroundTint="#0D47A1"
+                      android:text="Codec"
+                      android:textColor="#FFFFFF"
+                      android:textSize="10sp" />
               </LinearLayout>
           </LinearLayout>
           EOF
@@ -238,7 +309,10 @@ jobs:
           import android.content.Intent
           import android.content.res.ColorStateList
           import android.graphics.Color
+          import android.media.AudioManager
+          import android.media.audiofx.AudioEffect
           import android.provider.Settings
+          import android.view.KeyEvent
           import android.widget.RemoteViews
           import java.util.UUID
 
@@ -249,7 +323,12 @@ jobs:
                   const val ACTION_ANC = "com.drblack.budscontroller.ACTION_MODE_ANC"
                   const val ACTION_TRANS = "com.drblack.budscontroller.ACTION_MODE_TRANS"
                   const val ACTION_OFF = "com.drblack.budscontroller.ACTION_MODE_OFF"
+                  const val ACTION_VOL_UP = "com.drblack.budscontroller.ACTION_VOL_UP"
+                  const val ACTION_VOL_DOWN = "com.drblack.budscontroller.ACTION_VOL_DOWN"
+                  const val ACTION_PLAY_PAUSE = "com.drblack.budscontroller.ACTION_PLAY_PAUSE"
+                  const val ACTION_EQ = "com.drblack.budscontroller.ACTION_EQ"
                   const val ACTION_CODEC = "com.drblack.budscontroller.ACTION_OPEN_CODEC"
+                  const val ACTION_CONNECT_PANEL = "com.drblack.budscontroller.ACTION_CONNECT_PANEL"
                   const val ACTION_REFRESH = "com.drblack.budscontroller.ACTION_REFRESH"
 
                   fun updateAllWidgets(context: Context) {
@@ -260,6 +339,74 @@ jobs:
                           putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
                       }
                       context.sendBroadcast(intent)
+                  }
+
+                  fun dispatchDeviceCommand(context: Context, hexPayload: String) {
+                      val prefs = context.getSharedPreferences("BudsPrefs", Context.MODE_PRIVATE)
+                      val mac = prefs.getString("DEVICE_MAC", "00:BB:43:31:46:A8") ?: "00:BB:43:31:46:A8"
+                      val serviceUuidStr = prefs.getString("SERVICE_UUID", "") ?: ""
+                      val charUuidStr = prefs.getString("CHAR_UUID", "") ?: ""
+
+                      if (mac.isEmpty() || serviceUuidStr.isEmpty()) return
+
+                      val btManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+                      val device = try { btManager.adapter?.getRemoteDevice(mac) } catch (_: Exception) { null } ?: return
+                      val payloadBytes = hexStringToByteArray(hexPayload)
+
+                      // إذا كانت القناة RFCOMM Classic بدون Characteristic UUID
+                      if (charUuidStr.isEmpty() || charUuidStr == "RFCOMM") {
+                          Thread {
+                              try {
+                                  val socket = device.createInsecureRfcommSocketToServiceRecord(UUID.fromString(serviceUuidStr))
+                                  socket.connect()
+                                  socket.outputStream.write(payloadBytes)
+                                  socket.outputStream.flush()
+                                  Thread.sleep(150)
+                                  socket.close()
+                              } catch (_: Exception) {}
+                          }.start()
+                          return
+                      }
+
+                      // إرسال عبر BLE GATT
+                      device.connectGatt(context, false, object : BluetoothGattCallback() {
+                          override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
+                              if (newState == BluetoothProfile.STATE_CONNECTED) {
+                                  gatt.discoverServices()
+                              }
+                          }
+                          override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
+                              try {
+                                  val service = gatt.getService(UUID.fromString(serviceUuidStr))
+                                  val characteristic = service?.getCharacteristic(UUID.fromString(charUuidStr))
+                                  if (characteristic != null) {
+                                      characteristic.value = payloadBytes
+                                      gatt.writeCharacteristic(characteristic)
+                                  }
+                              } catch (_: Exception) {
+                              } finally {
+                                  gatt.disconnect()
+                                  gatt.close()
+                              }
+                          }
+                      }, BluetoothDevice.TRANSPORT_LE)
+                  }
+
+                  fun hexStringToByteArray(s: String): ByteArray {
+                      val clean = s.replace(" ", "").trim()
+                      if (clean.length % 2 != 0) return ByteArray(0)
+                      val len = clean.length
+                      val data = ByteArray(len / 2)
+                      var i = 0
+                      while (i < len) {
+                          val d1 = Character.digit(clean[i], 16)
+                          val d2 = Character.digit(clean[i + 1], 16)
+                          if (d1 != -1 && d2 != -1) {
+                              data[i / 2] = ((d1 shl 4) + d2).toByte()
+                          }
+                          i += 2
+                      }
+                      return data
                   }
               }
 
@@ -272,25 +419,69 @@ jobs:
               override fun onReceive(context: Context, intent: Intent) {
                   super.onReceive(context, intent)
                   val prefs = context.getSharedPreferences("BudsPrefs", Context.MODE_PRIVATE)
+                  val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
                   when (intent.action) {
                       ACTION_ANC -> {
                           prefs.edit().putString("CURRENT_MODE", "ANC").apply()
-                          sendBleCommand(context, prefs.getString("HEX_ANC", "0101") ?: "0101")
+                          dispatchDeviceCommand(context, prefs.getString("HEX_ANC", "0101") ?: "0101")
                       }
                       ACTION_TRANS -> {
                           prefs.edit().putString("CURRENT_MODE", "TRANS").apply()
-                          sendBleCommand(context, prefs.getString("HEX_TRANS", "0102") ?: "0102")
+                          dispatchDeviceCommand(context, prefs.getString("HEX_TRANS", "0102") ?: "0102")
                       }
                       ACTION_OFF -> {
                           prefs.edit().putString("CURRENT_MODE", "OFF").apply()
-                          sendBleCommand(context, prefs.getString("HEX_OFF", "0100") ?: "0100")
+                          dispatchDeviceCommand(context, prefs.getString("HEX_OFF", "0100") ?: "0100")
+                      }
+                      ACTION_VOL_UP -> {
+                          audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI)
+                      }
+                      ACTION_VOL_DOWN -> {
+                          audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI)
+                      }
+                      ACTION_PLAY_PAUSE -> {
+                          audioManager.dispatchMediaKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE))
+                          audioManager.dispatchMediaKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE))
+                      }
+                      ACTION_EQ -> {
+                          try {
+                              val eqIntent = Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL).apply {
+                                  flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                              }
+                              context.startActivity(eqIntent)
+                          } catch (_: Exception) {
+                              val soundIntent = Intent(Settings.ACTION_SOUND_SETTINGS).apply {
+                                  flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                              }
+                              context.startActivity(soundIntent)
+                          }
                       }
                       ACTION_CODEC -> {
-                          val btIntent = Intent(Settings.ACTION_BLUETOOTH_SETTINGS).apply {
-                              flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                          try {
+                              val devIntent = Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS).apply {
+                                  flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                              }
+                              context.startActivity(devIntent)
+                          } catch (_: Exception) {
+                              val btIntent = Intent(Settings.ACTION_BLUETOOTH_SETTINGS).apply {
+                                  flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                              }
+                              context.startActivity(btIntent)
                           }
-                          context.startActivity(btIntent)
+                      }
+                      ACTION_CONNECT_PANEL -> {
+                          try {
+                              val panelIntent = Intent("android.settings.panel.action.BLUETOOTH").apply {
+                                  flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                              }
+                              context.startActivity(panelIntent)
+                          } catch (_: Exception) {
+                              val btIntent = Intent(Settings.ACTION_BLUETOOTH_SETTINGS).apply {
+                                  flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                              }
+                              context.startActivity(btIntent)
+                          }
                       }
                   }
                   updateAllWidgets(context)
@@ -298,27 +489,32 @@ jobs:
 
               private fun updateWidgetUI(context: Context, appWidgetManager: AppWidgetManager, widgetId: Int) {
                   val prefs = context.getSharedPreferences("BudsPrefs", Context.MODE_PRIVATE)
-                  val savedMac = prefs.getString("DEVICE_MAC", "") ?: ""
+                  val savedMac = prefs.getString("DEVICE_MAC", "00:BB:43:31:46:A8") ?: "00:BB:43:31:46:A8"
                   val currentMode = prefs.getString("CURRENT_MODE", "OFF") ?: "OFF"
 
                   val views = RemoteViews(context.packageName, R.layout.widget_buds)
                   val btManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
                   val adapter = btManager.adapter
-                  val device = if (savedMac.isNotEmpty() && adapter != null) adapter.getRemoteDevice(savedMac) else null
+                  val device = try { if (savedMac.isNotEmpty() && adapter != null) adapter.getRemoteDevice(savedMac) else null } catch (_: Exception) { null }
+
+                  val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                  val curVol = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+                  val maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC).coerceAtLeast(1)
+                  val volPct = (curVol * 100) / maxVol
 
                   if (device != null) {
-                      views.setTextViewText(R.id.tv_device_name, device.name ?: "السماعة")
+                      views.setTextViewText(R.id.tv_device_name, device.name ?: "moto buds")
                       val battery = getDeviceBatteryLevel(device)
                       if (battery in 0..100) {
                           views.setTextViewText(R.id.tv_battery, "🔋 $battery%")
-                          views.setTextViewText(R.id.tv_status, "متصل • الوضع الحالي: $currentMode")
+                          views.setTextViewText(R.id.tv_status, "متصل • الوضع: $currentMode • الصوت: $volPct%")
                       } else {
                           views.setTextViewText(R.id.tv_battery, "غير متصل")
-                          views.setTextViewText(R.id.tv_status, "اضغط على اسم السماعة للضبط")
+                          views.setTextViewText(R.id.tv_status, "الصوت: $volPct% • اضغط على الاسم للإعدادات")
                       }
                   } else {
-                      views.setTextViewText(R.id.tv_device_name, "اختر السماعة")
-                      views.setTextViewText(R.id.tv_status, "اضغط هنا لربط السماعة من التطبيق")
+                      views.setTextViewText(R.id.tv_device_name, "moto buds")
+                      views.setTextViewText(R.id.tv_status, "اضغط هنا لفتح لوحة التحكم الشاملة")
                   }
 
                   val activeColor = ColorStateList.valueOf(Color.parseColor("#1976D2"))
@@ -330,11 +526,16 @@ jobs:
                   views.setOnClickPendingIntent(R.id.btn_anc, getPendingIntent(context, ACTION_ANC))
                   views.setOnClickPendingIntent(R.id.btn_trans, getPendingIntent(context, ACTION_TRANS))
                   views.setOnClickPendingIntent(R.id.btn_off, getPendingIntent(context, ACTION_OFF))
+                  views.setOnClickPendingIntent(R.id.btn_vol_up, getPendingIntent(context, ACTION_VOL_UP))
+                  views.setOnClickPendingIntent(R.id.btn_vol_down, getPendingIntent(context, ACTION_VOL_DOWN))
+                  views.setOnClickPendingIntent(R.id.btn_play_pause, getPendingIntent(context, ACTION_PLAY_PAUSE))
+                  views.setOnClickPendingIntent(R.id.btn_eq, getPendingIntent(context, ACTION_EQ))
                   views.setOnClickPendingIntent(R.id.btn_codec, getPendingIntent(context, ACTION_CODEC))
+                  views.setOnClickPendingIntent(R.id.btn_connect, getPendingIntent(context, ACTION_CONNECT_PANEL))
                   views.setOnClickPendingIntent(R.id.tv_battery, getPendingIntent(context, ACTION_REFRESH))
 
                   val openAppIntent = Intent(context, MainActivity::class.java)
-                  val openAppPending = PendingIntent.getActivity(context, 0, openAppIntent, PendingIntent.FLAG_IMMUTABLE)
+                  val openAppPending = PendingIntent.getActivity(context, 0, openAppIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
                   views.setOnClickPendingIntent(R.id.tv_device_name, openAppPending)
 
                   appWidgetManager.updateAppWidget(widgetId, views)
@@ -353,53 +554,6 @@ jobs:
                       -1
                   }
               }
-
-              private fun sendBleCommand(context: Context, hexPayload: String) {
-                  val prefs = context.getSharedPreferences("BudsPrefs", Context.MODE_PRIVATE)
-                  val mac = prefs.getString("DEVICE_MAC", "") ?: return
-                  val serviceUuidStr = prefs.getString("SERVICE_UUID", "") ?: ""
-                  val charUuidStr = prefs.getString("CHAR_UUID", "") ?: ""
-
-                  if (mac.isEmpty() || serviceUuidStr.isEmpty() || charUuidStr.isEmpty()) return
-
-                  val btManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-                  val device = btManager.adapter?.getRemoteDevice(mac) ?: return
-                  val payloadBytes = hexStringToByteArray(hexPayload)
-
-                  device.connectGatt(context, false, object : BluetoothGattCallback() {
-                      override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
-                          if (newState == BluetoothProfile.STATE_CONNECTED) {
-                              gatt.discoverServices()
-                          }
-                      }
-                      override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
-                          try {
-                              val service = gatt.getService(UUID.fromString(serviceUuidStr))
-                              val characteristic = service?.getCharacteristic(UUID.fromString(charUuidStr))
-                              if (characteristic != null) {
-                                  characteristic.value = payloadBytes
-                                  gatt.writeCharacteristic(characteristic)
-                              }
-                          } catch (_: Exception) {
-                          } finally {
-                              gatt.disconnect()
-                              gatt.close()
-                          }
-                      }
-                  })
-              }
-
-              private fun hexStringToByteArray(s: String): ByteArray {
-                  val clean = s.replace(" ", "")
-                  val len = clean.length
-                  val data = ByteArray(len / 2)
-                  var i = 0
-                  while (i < len) {
-                      data[i / 2] = ((Character.digit(clean[i], 16) shl 4) + Character.digit(clean[i + 1], 16)).toByte()
-                      i += 2
-                  }
-                  return data
-              }
           }
           EOF
 
@@ -409,16 +563,28 @@ jobs:
           import android.Manifest
           import android.annotation.SuppressLint
           import android.app.Activity
-          import android.bluetooth.BluetoothManager
+          import android.bluetooth.*
           import android.content.Context
+          import android.content.Intent
           import android.content.pm.PackageManager
           import android.graphics.Color
+          import android.media.AudioManager
+          import android.media.ToneGenerator
+          import android.media.audiofx.AudioEffect
           import android.os.Build
           import android.os.Bundle
+          import android.provider.Settings
+          import android.view.View
           import android.widget.*
 
           @SuppressLint("MissingPermission")
           class MainActivity : Activity() {
+
+              private var toneGen: ToneGenerator? = null
+              private var isRinging = false
+
+              data class DiscoveredChannel(val label: String, val serviceUuid: String, val charUuid: String)
+
               override fun onCreate(savedInstanceState: Bundle?) {
                   super.onCreate(savedInstanceState)
                   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -431,29 +597,167 @@ jobs:
                   val root = ScrollView(this).apply { setBackgroundColor(Color.parseColor("#121212")) }
                   val layout = LinearLayout(this).apply {
                       orientation = LinearLayout.VERTICAL
-                      setPadding(40, 60, 40, 60)
+                      setPadding(36, 48, 36, 60)
                   }
 
                   val title = TextView(this).apply {
-                      text = "إعدادات التحكم في السماعة"
-                      textSize = 22f
+                      text = "لوحة التحكم الشاملة - Moto Buds"
+                      textSize = 20f
                       setTextColor(Color.WHITE)
-                      setPadding(0, 0, 0, 30)
+                      setPadding(0, 0, 0, 20)
                   }
                   layout.addView(title)
 
+                  // 1. اختيار السماعة
                   val spinner = Spinner(this)
                   val btManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
                   val pairedDevices = btManager.adapter?.bondedDevices?.toList() ?: emptyList()
                   val deviceNames = pairedDevices.map { "${it.name} (${it.address})" }
                   spinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, deviceNames)
+
+                  val savedMac = prefs.getString("DEVICE_MAC", "00:BB:43:31:46:A8") ?: "00:BB:43:31:46:A8"
+                  val defaultIndex = pairedDevices.indexOfFirst { it.address.equals(savedMac, ignoreCase = true) || (it.name ?: "").contains("moto", ignoreCase = true) }
+                  if (defaultIndex >= 0) spinner.setSelection(defaultIndex)
                   layout.addView(spinner)
 
-                  val etService = createInput("Service UUID (اختياري للـ BLE)", prefs.getString("SERVICE_UUID", "") ?: "")
-                  val etChar = createInput("Characteristic UUID", prefs.getString("CHAR_UUID", "") ?: "")
+                  // 2. أزرار التحكم السريع في النظام والصوت
+                  val quickRow = LinearLayout(this).apply {
+                      orientation = LinearLayout.HORIZONTAL
+                      setPadding(0, 20, 0, 10)
+                  }
+                  val btnBtPanel = Button(this).apply {
+                      text = "🔗 اتصال/فصل"
+                      layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                      setOnClickListener {
+                          try {
+                              startActivity(Intent("android.settings.panel.action.BLUETOOTH"))
+                          } catch (_: Exception) {
+                              startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
+                          }
+                      }
+                  }
+                  val btnEq = Button(this).apply {
+                      text = "🎚️ المعادل/Dolby"
+                      layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                      setOnClickListener {
+                          try {
+                              startActivityForResult(Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL), 0)
+                          } catch (_: Exception) {
+                              startActivity(Intent(Settings.ACTION_SOUND_SETTINGS))
+                          }
+                      }
+                  }
+                  val btnFind = Button(this).apply {
+                      text = "🔊 رنين البحث"
+                      layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                      setOnClickListener {
+                          if (!isRinging) {
+                              val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                              am.setStreamVolume(AudioManager.STREAM_MUSIC, am.getStreamMaxVolume(AudioManager.STREAM_MUSIC), 0)
+                              toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, 100)
+                              toneGen?.startTone(ToneGenerator.TONE_CDMA_EMERGENCY_RINGBACK, 10000)
+                              isRinging = true
+                              text = "⏹️ إيقاف الرنين"
+                          } else {
+                              toneGen?.stopTone()
+                              toneGen?.release()
+                              toneGen = null
+                              isRinging = false
+                              text = "🔊 رنين البحث"
+                          }
+                      }
+                  }
+                  quickRow.addView(btnBtPanel)
+                  quickRow.addView(btnEq)
+                  quickRow.addView(btnFind)
+                  layout.addView(quickRow)
+
+                  // 3. الماسح الذكي لاستخراج أكواد السماعة تلقائياً
+                  val tvScanStatus = TextView(this).apply {
+                      text = "اضغط على زر الفحص لاستخراج قنوات التحكم الخاصة بسماعتك:"
+                      setTextColor(Color.parseColor("#00E676"))
+                      textSize = 13f
+                      setPadding(0, 20, 0, 10)
+                  }
+                  layout.addView(tvScanStatus)
+
+                  val discoveredList = mutableListOf<DiscoveredChannel>()
+                  val spDiscovered = Spinner(this)
+                  layout.addView(spDiscovered)
+
+                  val etService = createInput("Service UUID", prefs.getString("SERVICE_UUID", "") ?: "")
+                  val etChar = createInput("Characteristic UUID (أو RFCOMM)", prefs.getString("CHAR_UUID", "") ?: "")
                   val etAnc = createInput("كود Hex لوضع العزل (ANC)", prefs.getString("HEX_ANC", "0101") ?: "0101")
                   val etTrans = createInput("كود Hex لوضع الشفافية", prefs.getString("HEX_TRANS", "0102") ?: "0102")
                   val etOff = createInput("كود Hex للوضع العادي (Off)", prefs.getString("HEX_OFF", "0100") ?: "0100")
+
+                  spDiscovered.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                      override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                          if (position in discoveredList.indices) {
+                              val ch = discoveredList[position]
+                              etService.setText(ch.serviceUuid)
+                              etChar.setText(ch.charUuid)
+                          }
+                      }
+                      override fun onNothingSelected(parent: AdapterView<*>?) {}
+                  }
+
+                  val btnScan = Button(this).apply {
+                      text = "🔍 فحص السماعة واستخراج الأكواد تلقائياً (Auto-Discover)"
+                      setBackgroundColor(Color.parseColor("#2E7D32"))
+                      setTextColor(Color.WHITE)
+                      setOnClickListener {
+                          val idx = spinner.selectedItemPosition
+                          if (idx < 0 || idx >= pairedDevices.size) {
+                              Toast.makeText(this@MainActivity, "اختر السماعة أولاً", Toast.LENGTH_SHORT).show()
+                              return@setOnClickListener
+                          }
+                          val dev = pairedDevices[idx]
+                          discoveredList.clear()
+                          tvScanStatus.text = "جاري فحص قنوات ${dev.name} (BLE + RFCOMM)..."
+
+                          // إضافة قنوات Classic Bluetooth SPP المكتشفة في النظام
+                          dev.fetchUuidsWithSdp()
+                          dev.uuids?.forEach { parcelUuid ->
+                              val u = parcelUuid.uuid.toString()
+                              // استبعاد بروتوكولات الصوت القياسية للتركيز على قنوات التحكم
+                              if (!u.startsWith("0000110b") && !u.startsWith("0000110e") && !u.startsWith("0000111e") && !u.startsWith("00001200")) {
+                                  discoveredList.add(DiscoveredChannel("Classic SPP: ${u.substring(0, 8)}...", u, "RFCOMM"))
+                              }
+                          }
+
+                          // فحص قنوات BLE GATT القابلة للكتابة
+                          dev.connectGatt(this@MainActivity, false, object : BluetoothGattCallback() {
+                              override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
+                                  if (newState == BluetoothProfile.STATE_CONNECTED) {
+                                      gatt.discoverServices()
+                                  } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                                      runOnUiThread {
+                                          updateDiscoveredSpinner(spDiscovered, discoveredList, tvScanStatus)
+                                      }
+                                  }
+                              }
+                              override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
+                                  for (service in gatt.services) {
+                                      val sUuid = service.uuid.toString()
+                                      for (ch in service.characteristics) {
+                                          val props = ch.properties
+                                          if ((props and (BluetoothGattCharacteristic.PROPERTY_WRITE or BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE)) != 0) {
+                                              val cUuid = ch.uuid.toString()
+                                              discoveredList.add(DiscoveredChannel("BLE Write: ${cUuid.substring(0, 8)}...", sUuid, cUuid))
+                                          }
+                                      }
+                                  }
+                                  gatt.disconnect()
+                                  gatt.close()
+                                  runOnUiThread {
+                                      updateDiscoveredSpinner(spDiscovered, discoveredList, tvScanStatus)
+                                  }
+                              }
+                          }, BluetoothDevice.TRANSPORT_LE)
+                      }
+                  }
+                  layout.addView(btnScan)
 
                   layout.addView(etService)
                   layout.addView(etChar)
@@ -461,28 +765,87 @@ jobs:
                   layout.addView(etTrans)
                   layout.addView(etOff)
 
+                  // 4. أزرار التجربة الفورية للأكواد
+                  val testRow = LinearLayout(this).apply {
+                      orientation = LinearLayout.HORIZONTAL
+                      setPadding(0, 16, 0, 16)
+                  }
+                  val btnTestAnc = Button(this).apply {
+                      text = "تجربة ANC"
+                      layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                      setOnClickListener {
+                          saveCurrentPrefs(spinner, pairedDevices, etService, etChar, etAnc, etTrans, etOff)
+                          BudsWidgetProvider.dispatchDeviceCommand(this@MainActivity, etAnc.text.toString())
+                          Toast.makeText(this@MainActivity, "تم إرسال أمر ANC للسماعة", Toast.LENGTH_SHORT).show()
+                      }
+                  }
+                  val btnTestTrans = Button(this).apply {
+                      text = "تجربة شفافية"
+                      layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                      setOnClickListener {
+                          saveCurrentPrefs(spinner, pairedDevices, etService, etChar, etAnc, etTrans, etOff)
+                          BudsWidgetProvider.dispatchDeviceCommand(this@MainActivity, etTrans.text.toString())
+                          Toast.makeText(this@MainActivity, "تم إرسال أمر الشفافية للسماعة", Toast.LENGTH_SHORT).show()
+                      }
+                  }
+                  val btnTestOff = Button(this).apply {
+                      text = "تجربة Off"
+                      layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                      setOnClickListener {
+                          saveCurrentPrefs(spinner, pairedDevices, etService, etChar, etAnc, etTrans, etOff)
+                          BudsWidgetProvider.dispatchDeviceCommand(this@MainActivity, etOff.text.toString())
+                          Toast.makeText(this@MainActivity, "تم إرسال أمر Off للسماعة", Toast.LENGTH_SHORT).show()
+                      }
+                  }
+                  testRow.addView(btnTestAnc)
+                  testRow.addView(btnTestTrans)
+                  testRow.addView(btnTestOff)
+                  layout.addView(testRow)
+
                   val btnSave = Button(this).apply {
-                      text = "حفظ وتحديث الويدجيت"
+                      text = "💾 حفظ الإعدادات وتحديث الويدجيت"
                       setBackgroundColor(Color.parseColor("#1976D2"))
                       setTextColor(Color.WHITE)
                       setOnClickListener {
-                          val selectedIdx = spinner.selectedItemPosition
-                          val mac = if (selectedIdx >= 0 && selectedIdx < pairedDevices.size) pairedDevices[selectedIdx].address else ""
-                          prefs.edit()
-                              .putString("DEVICE_MAC", mac)
-                              .putString("SERVICE_UUID", etService.text.toString().trim())
-                              .putString("CHAR_UUID", etChar.text.toString().trim())
-                              .putString("HEX_ANC", etAnc.text.toString().trim())
-                              .putString("HEX_TRANS", etTrans.text.toString().trim())
-                              .putString("HEX_OFF", etOff.text.toString().trim())
-                              .apply()
+                          saveCurrentPrefs(spinner, pairedDevices, etService, etChar, etAnc, etTrans, etOff)
                           BudsWidgetProvider.updateAllWidgets(this@MainActivity)
                           Toast.makeText(this@MainActivity, "تم الحفظ وتحديث الويدجيت بنجاح!", Toast.LENGTH_SHORT).show()
                       }
                   }
                   layout.addView(btnSave)
+
                   root.addView(layout)
                   setContentView(root)
+              }
+
+              private fun updateDiscoveredSpinner(spinner: Spinner, list: List<DiscoveredChannel>, statusView: TextView) {
+                  if (list.isEmpty()) {
+                      statusView.text = "لم يتم العثور على قنوات مفتوحة (تأكد من إخراج السماعة من العلبة واتصالها)."
+                  } else {
+                      statusView.text = "✅ تم العثور على ${list.size} قناة تحكم! اختر منها للتجربة:"
+                      spinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, list.map { it.label })
+                  }
+              }
+
+              private fun saveCurrentPrefs(
+                  spinner: Spinner,
+                  pairedDevices: List<BluetoothDevice>,
+                  etService: EditText,
+                  etChar: EditText,
+                  etAnc: EditText,
+                  etTrans: EditText,
+                  etOff: EditText
+              ) {
+                  val selectedIdx = spinner.selectedItemPosition
+                  val mac = if (selectedIdx in pairedDevices.indices) pairedDevices[selectedIdx].address else "00:BB:43:31:46:A8"
+                  getSharedPreferences("BudsPrefs", Context.MODE_PRIVATE).edit()
+                      .putString("DEVICE_MAC", mac)
+                      .putString("SERVICE_UUID", etService.text.toString().trim())
+                      .putString("CHAR_UUID", etChar.text.toString().trim())
+                      .putString("HEX_ANC", etAnc.text.toString().trim())
+                      .putString("HEX_TRANS", etTrans.text.toString().trim())
+                      .putString("HEX_OFF", etOff.text.toString().trim())
+                      .apply()
               }
 
               private fun createInput(hintText: String, initialValue: String): EditText {
@@ -491,8 +854,13 @@ jobs:
                       setText(initialValue)
                       setTextColor(Color.WHITE)
                       setHintTextColor(Color.GRAY)
-                      setPadding(20, 30, 20, 30)
+                      setPadding(20, 24, 20, 24)
                   }
+              }
+
+              override fun onDestroy() {
+                  super.onDestroy()
+                  toneGen?.release()
               }
           }
           EOF
@@ -514,5 +882,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: BudsController-APK
+          name: BudsController-Pro-v2-APK
           path: app/build/outputs/apk/debug/app-debug.apk
