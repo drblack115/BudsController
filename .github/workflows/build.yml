@@ -1,0 +1,518 @@
+name: Auto Generate and Build APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate Full Android Project Automatically
+        run: |
+          mkdir -p app/src/main/java/com/drblack/budscontroller
+          mkdir -p app/src/main/res/layout
+          mkdir -p app/src/main/res/xml
+
+          cat << 'EOF' > settings.gradle
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          rootProject.name = "BudsController"
+          include ':app'
+          EOF
+
+          cat << 'EOF' > build.gradle
+          plugins {
+              id 'com.android.application' version '7.4.2' apply false
+              id 'org.jetbrains.kotlin.android' version '1.8.22' apply false
+          }
+          EOF
+
+          cat << 'EOF' > app/build.gradle
+          plugins {
+              id 'com.android.application'
+              id 'org.jetbrains.kotlin.android'
+          }
+          android {
+              namespace 'com.drblack.budscontroller'
+              compileSdk 34
+              defaultConfig {
+                  applicationId "com.drblack.budscontroller"
+                  minSdk 31
+                  targetSdk 34
+                  versionCode 1
+                  versionName "1.0"
+              }
+              buildTypes {
+                  debug {
+                      minifyEnabled false
+                  }
+              }
+              compileOptions {
+                  sourceCompatibility JavaVersion.VERSION_17
+                  targetCompatibility JavaVersion.VERSION_17
+              }
+              kotlinOptions {
+                  jvmTarget = '17'
+              }
+              lint {
+                  abortOnError false
+                  checkReleaseBuilds false
+              }
+          }
+          dependencies {}
+          EOF
+
+          cat << 'EOF' > app/src/main/AndroidManifest.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <uses-permission android:name="android.permission.BLUETOOTH" />
+              <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+              <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+              <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+
+              <application
+                  android:allowBackup="true"
+                  android:label="Buds Controller"
+                  android:supportsRtl="true"
+                  android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
+
+                  <activity android:name=".MainActivity" android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+
+                  <receiver android:name=".BudsWidgetProvider" android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                          <action android:name="android.bluetooth.device.action.ACL_CONNECTED" />
+                          <action android:name="android.bluetooth.device.action.ACL_DISCONNECTED" />
+                          <action android:name="android.bluetooth.device.action.BATTERY_LEVEL_CHANGED" />
+                          <action android:name="com.drblack.budscontroller.ACTION_MODE_ANC" />
+                          <action android:name="com.drblack.budscontroller.ACTION_MODE_TRANS" />
+                          <action android:name="com.drblack.budscontroller.ACTION_MODE_OFF" />
+                          <action android:name="com.drblack.budscontroller.ACTION_OPEN_CODEC" />
+                          <action android:name="com.drblack.budscontroller.ACTION_REFRESH" />
+                      </intent-filter>
+                      <meta-data
+                          android:name="android.appwidget.provider"
+                          android:resource="@xml/widget_info" />
+                  </receiver>
+              </application>
+          </manifest>
+          EOF
+
+          cat << 'EOF' > app/src/main/res/xml/widget_info.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+              android:minWidth="250dp"
+              android:minHeight="110dp"
+              android:updatePeriodMillis="1800000"
+              android:initialLayout="@layout/widget_buds"
+              android:resizeMode="horizontal|vertical"
+              android:widgetCategory="home_screen" />
+          EOF
+
+          cat << 'EOF' > app/src/main/res/layout/widget_buds.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:background="#1A1A1A"
+              android:orientation="vertical"
+              android:padding="12dp">
+
+              <LinearLayout
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:gravity="center_vertical"
+                  android:orientation="horizontal">
+
+                  <TextView
+                      android:id="@+id/tv_device_name"
+                      android:layout_width="0dp"
+                      android:layout_height="wrap_content"
+                      android:layout_weight="1"
+                      android:text="Moto Buds"
+                      android:textColor="#FFFFFF"
+                      android:textSize="16sp"
+                      android:textStyle="bold" />
+
+                  <TextView
+                      android:id="@+id/tv_battery"
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:layout_marginEnd="10dp"
+                      android:text="🔋 --%"
+                      android:textColor="#00E676"
+                      android:textSize="14sp"
+                      android:textStyle="bold" />
+
+                  <Button
+                      android:id="@+id/btn_codec"
+                      android:layout_width="wrap_content"
+                      android:layout_height="34dp"
+                      android:backgroundTint="#333333"
+                      android:text="Audio / Codec"
+                      android:textColor="#FFFFFF"
+                      android:textSize="11sp" />
+              </LinearLayout>
+
+              <TextView
+                  android:id="@+id/tv_status"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:layout_marginTop="2dp"
+                  android:layout_marginBottom="8dp"
+                  android:text="الحالة: جاري الفحص..."
+                  android:textColor="#AAAAAA"
+                  android:textSize="12sp" />
+
+              <LinearLayout
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:orientation="horizontal"
+                  android:weightSum="3">
+
+                  <Button
+                      android:id="@+id/btn_anc"
+                      android:layout_width="0dp"
+                      android:layout_height="42dp"
+                      android:layout_marginEnd="4dp"
+                      android:layout_weight="1"
+                      android:backgroundTint="#2C2C2C"
+                      android:text="ANC عزل"
+                      android:textColor="#FFFFFF"
+                      android:textSize="12sp" />
+
+                  <Button
+                      android:id="@+id/btn_trans"
+                      android:layout_width="0dp"
+                      android:layout_height="42dp"
+                      android:layout_marginEnd="4dp"
+                      android:layout_weight="1"
+                      android:backgroundTint="#2C2C2C"
+                      android:text="شفافية"
+                      android:textColor="#FFFFFF"
+                      android:textSize="12sp" />
+
+                  <Button
+                      android:id="@+id/btn_off"
+                      android:layout_width="0dp"
+                      android:layout_height="42dp"
+                      android:layout_weight="1"
+                      android:backgroundTint="#2C2C2C"
+                      android:text="عادي Off"
+                      android:textColor="#FFFFFF"
+                      android:textSize="12sp" />
+              </LinearLayout>
+          </LinearLayout>
+          EOF
+
+          cat << 'EOF' > app/src/main/java/com/drblack/budscontroller/BudsWidgetProvider.kt
+          package com.drblack.budscontroller
+
+          import android.annotation.SuppressLint
+          import android.app.PendingIntent
+          import android.appwidget.AppWidgetManager
+          import android.appwidget.AppWidgetProvider
+          import android.bluetooth.*
+          import android.content.ComponentName
+          import android.content.Context
+          import android.content.Intent
+          import android.content.res.ColorStateList
+          import android.graphics.Color
+          import android.provider.Settings
+          import android.widget.RemoteViews
+          import java.util.UUID
+
+          @SuppressLint("MissingPermission")
+          class BudsWidgetProvider : AppWidgetProvider() {
+
+              companion object {
+                  const val ACTION_ANC = "com.drblack.budscontroller.ACTION_MODE_ANC"
+                  const val ACTION_TRANS = "com.drblack.budscontroller.ACTION_MODE_TRANS"
+                  const val ACTION_OFF = "com.drblack.budscontroller.ACTION_MODE_OFF"
+                  const val ACTION_CODEC = "com.drblack.budscontroller.ACTION_OPEN_CODEC"
+                  const val ACTION_REFRESH = "com.drblack.budscontroller.ACTION_REFRESH"
+
+                  fun updateAllWidgets(context: Context) {
+                      val manager = AppWidgetManager.getInstance(context)
+                      val ids = manager.getAppWidgetIds(ComponentName(context, BudsWidgetProvider::class.java))
+                      val intent = Intent(context, BudsWidgetProvider::class.java).apply {
+                          action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+                          putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+                      }
+                      context.sendBroadcast(intent)
+                  }
+              }
+
+              override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
+                  for (widgetId in appWidgetIds) {
+                      updateWidgetUI(context, appWidgetManager, widgetId)
+                  }
+              }
+
+              override fun onReceive(context: Context, intent: Intent) {
+                  super.onReceive(context, intent)
+                  val prefs = context.getSharedPreferences("BudsPrefs", Context.MODE_PRIVATE)
+
+                  when (intent.action) {
+                      ACTION_ANC -> {
+                          prefs.edit().putString("CURRENT_MODE", "ANC").apply()
+                          sendBleCommand(context, prefs.getString("HEX_ANC", "0101") ?: "0101")
+                      }
+                      ACTION_TRANS -> {
+                          prefs.edit().putString("CURRENT_MODE", "TRANS").apply()
+                          sendBleCommand(context, prefs.getString("HEX_TRANS", "0102") ?: "0102")
+                      }
+                      ACTION_OFF -> {
+                          prefs.edit().putString("CURRENT_MODE", "OFF").apply()
+                          sendBleCommand(context, prefs.getString("HEX_OFF", "0100") ?: "0100")
+                      }
+                      ACTION_CODEC -> {
+                          val btIntent = Intent(Settings.ACTION_BLUETOOTH_SETTINGS).apply {
+                              flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                          }
+                          context.startActivity(btIntent)
+                      }
+                  }
+                  updateAllWidgets(context)
+              }
+
+              private fun updateWidgetUI(context: Context, appWidgetManager: AppWidgetManager, widgetId: Int) {
+                  val prefs = context.getSharedPreferences("BudsPrefs", Context.MODE_PRIVATE)
+                  val savedMac = prefs.getString("DEVICE_MAC", "") ?: ""
+                  val currentMode = prefs.getString("CURRENT_MODE", "OFF") ?: "OFF"
+
+                  val views = RemoteViews(context.packageName, R.layout.widget_buds)
+                  val btManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+                  val adapter = btManager.adapter
+                  val device = if (savedMac.isNotEmpty() && adapter != null) adapter.getRemoteDevice(savedMac) else null
+
+                  if (device != null) {
+                      views.setTextViewText(R.id.tv_device_name, device.name ?: "السماعة")
+                      val battery = getDeviceBatteryLevel(device)
+                      if (battery in 0..100) {
+                          views.setTextViewText(R.id.tv_battery, "🔋 $battery%")
+                          views.setTextViewText(R.id.tv_status, "متصل • الوضع الحالي: $currentMode")
+                      } else {
+                          views.setTextViewText(R.id.tv_battery, "غير متصل")
+                          views.setTextViewText(R.id.tv_status, "اضغط على اسم السماعة للضبط")
+                      }
+                  } else {
+                      views.setTextViewText(R.id.tv_device_name, "اختر السماعة")
+                      views.setTextViewText(R.id.tv_status, "اضغط هنا لربط السماعة من التطبيق")
+                  }
+
+                  val activeColor = ColorStateList.valueOf(Color.parseColor("#1976D2"))
+                  val idleColor = ColorStateList.valueOf(Color.parseColor("#2C2C2C"))
+                  views.setColorStateList(R.id.btn_anc, "setBackgroundTintList", if (currentMode == "ANC") activeColor else idleColor)
+                  views.setColorStateList(R.id.btn_trans, "setBackgroundTintList", if (currentMode == "TRANS") activeColor else idleColor)
+                  views.setColorStateList(R.id.btn_off, "setBackgroundTintList", if (currentMode == "OFF") activeColor else idleColor)
+
+                  views.setOnClickPendingIntent(R.id.btn_anc, getPendingIntent(context, ACTION_ANC))
+                  views.setOnClickPendingIntent(R.id.btn_trans, getPendingIntent(context, ACTION_TRANS))
+                  views.setOnClickPendingIntent(R.id.btn_off, getPendingIntent(context, ACTION_OFF))
+                  views.setOnClickPendingIntent(R.id.btn_codec, getPendingIntent(context, ACTION_CODEC))
+                  views.setOnClickPendingIntent(R.id.tv_battery, getPendingIntent(context, ACTION_REFRESH))
+
+                  val openAppIntent = Intent(context, MainActivity::class.java)
+                  val openAppPending = PendingIntent.getActivity(context, 0, openAppIntent, PendingIntent.FLAG_IMMUTABLE)
+                  views.setOnClickPendingIntent(R.id.tv_device_name, openAppPending)
+
+                  appWidgetManager.updateAppWidget(widgetId, views)
+              }
+
+              private fun getPendingIntent(context: Context, actionStr: String): PendingIntent {
+                  val intent = Intent(context, BudsWidgetProvider::class.java).apply { action = actionStr }
+                  return PendingIntent.getBroadcast(context, actionStr.hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+              }
+
+              private fun getDeviceBatteryLevel(device: BluetoothDevice): Int {
+                  return try {
+                      val method = device.javaClass.getMethod("getBatteryLevel")
+                      method.invoke(device) as Int
+                  } catch (e: Exception) {
+                      -1
+                  }
+              }
+
+              private fun sendBleCommand(context: Context, hexPayload: String) {
+                  val prefs = context.getSharedPreferences("BudsPrefs", Context.MODE_PRIVATE)
+                  val mac = prefs.getString("DEVICE_MAC", "") ?: return
+                  val serviceUuidStr = prefs.getString("SERVICE_UUID", "") ?: ""
+                  val charUuidStr = prefs.getString("CHAR_UUID", "") ?: ""
+
+                  if (mac.isEmpty() || serviceUuidStr.isEmpty() || charUuidStr.isEmpty()) return
+
+                  val btManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+                  val device = btManager.adapter?.getRemoteDevice(mac) ?: return
+                  val payloadBytes = hexStringToByteArray(hexPayload)
+
+                  device.connectGatt(context, false, object : BluetoothGattCallback() {
+                      override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
+                          if (newState == BluetoothProfile.STATE_CONNECTED) {
+                              gatt.discoverServices()
+                          }
+                      }
+                      override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
+                          try {
+                              val service = gatt.getService(UUID.fromString(serviceUuidStr))
+                              val characteristic = service?.getCharacteristic(UUID.fromString(charUuidStr))
+                              if (characteristic != null) {
+                                  characteristic.value = payloadBytes
+                                  gatt.writeCharacteristic(characteristic)
+                              }
+                          } catch (_: Exception) {
+                          } finally {
+                              gatt.disconnect()
+                              gatt.close()
+                          }
+                      }
+                  })
+              }
+
+              private fun hexStringToByteArray(s: String): ByteArray {
+                  val clean = s.replace(" ", "")
+                  val len = clean.length
+                  val data = ByteArray(len / 2)
+                  var i = 0
+                  while (i < len) {
+                      data[i / 2] = ((Character.digit(clean[i], 16) shl 4) + Character.digit(clean[i + 1], 16)).toByte()
+                      i += 2
+                  }
+                  return data
+              }
+          }
+          EOF
+
+          cat << 'EOF' > app/src/main/java/com/drblack/budscontroller/MainActivity.kt
+          package com.drblack.budscontroller
+
+          import android.Manifest
+          import android.annotation.SuppressLint
+          import android.app.Activity
+          import android.bluetooth.BluetoothManager
+          import android.content.Context
+          import android.content.pm.PackageManager
+          import android.graphics.Color
+          import android.os.Build
+          import android.os.Bundle
+          import android.widget.*
+
+          @SuppressLint("MissingPermission")
+          class MainActivity : Activity() {
+              override fun onCreate(savedInstanceState: Bundle?) {
+                  super.onCreate(savedInstanceState)
+                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                      if (checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                          requestPermissions(arrayOf(Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN), 101)
+                      }
+                  }
+
+                  val prefs = getSharedPreferences("BudsPrefs", Context.MODE_PRIVATE)
+                  val root = ScrollView(this).apply { setBackgroundColor(Color.parseColor("#121212")) }
+                  val layout = LinearLayout(this).apply {
+                      orientation = LinearLayout.VERTICAL
+                      setPadding(40, 60, 40, 60)
+                  }
+
+                  val title = TextView(this).apply {
+                      text = "إعدادات التحكم في السماعة"
+                      textSize = 22f
+                      setTextColor(Color.WHITE)
+                      setPadding(0, 0, 0, 30)
+                  }
+                  layout.addView(title)
+
+                  val spinner = Spinner(this)
+                  val btManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+                  val pairedDevices = btManager.adapter?.bondedDevices?.toList() ?: emptyList()
+                  val deviceNames = pairedDevices.map { "${it.name} (${it.address})" }
+                  spinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, deviceNames)
+                  layout.addView(spinner)
+
+                  val etService = createInput("Service UUID (اختياري للـ BLE)", prefs.getString("SERVICE_UUID", "") ?: "")
+                  val etChar = createInput("Characteristic UUID", prefs.getString("CHAR_UUID", "") ?: "")
+                  val etAnc = createInput("كود Hex لوضع العزل (ANC)", prefs.getString("HEX_ANC", "0101") ?: "0101")
+                  val etTrans = createInput("كود Hex لوضع الشفافية", prefs.getString("HEX_TRANS", "0102") ?: "0102")
+                  val etOff = createInput("كود Hex للوضع العادي (Off)", prefs.getString("HEX_OFF", "0100") ?: "0100")
+
+                  layout.addView(etService)
+                  layout.addView(etChar)
+                  layout.addView(etAnc)
+                  layout.addView(etTrans)
+                  layout.addView(etOff)
+
+                  val btnSave = Button(this).apply {
+                      text = "حفظ وتحديث الويدجيت"
+                      setBackgroundColor(Color.parseColor("#1976D2"))
+                      setTextColor(Color.WHITE)
+                      setOnClickListener {
+                          val selectedIdx = spinner.selectedItemPosition
+                          val mac = if (selectedIdx >= 0 && selectedIdx < pairedDevices.size) pairedDevices[selectedIdx].address else ""
+                          prefs.edit()
+                              .putString("DEVICE_MAC", mac)
+                              .putString("SERVICE_UUID", etService.text.toString().trim())
+                              .putString("CHAR_UUID", etChar.text.toString().trim())
+                              .putString("HEX_ANC", etAnc.text.toString().trim())
+                              .putString("HEX_TRANS", etTrans.text.toString().trim())
+                              .putString("HEX_OFF", etOff.text.toString().trim())
+                              .apply()
+                          BudsWidgetProvider.updateAllWidgets(this@MainActivity)
+                          Toast.makeText(this@MainActivity, "تم الحفظ وتحديث الويدجيت بنجاح!", Toast.LENGTH_SHORT).show()
+                      }
+                  }
+                  layout.addView(btnSave)
+                  root.addView(layout)
+                  setContentView(root)
+              }
+
+              private fun createInput(hintText: String, initialValue: String): EditText {
+                  return EditText(this).apply {
+                      hint = hintText
+                      setText(initialValue)
+                      setTextColor(Color.WHITE)
+                      setHintTextColor(Color.GRAY)
+                      setPadding(20, 30, 20, 30)
+                  }
+              }
+          }
+          EOF
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '7.6.4'
+
+      - name: Build Debug APK
+        run: gradle assembleDebug --stacktrace
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: BudsController-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
